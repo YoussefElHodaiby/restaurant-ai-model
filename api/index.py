@@ -1,6 +1,6 @@
 """
 Vercel Python Serverless entry point for FastAPI.
-Extracts the original path from Vercel's ?path= query parameter.
+Logs all ASGI scope details to debug Vercel routing.
 """
 import sys
 import os
@@ -13,43 +13,56 @@ from main import app
 from mangum import Mangum
 
 
-class VercelPathMiddleware:
+class DebugPathMiddleware:
     """
-    Middleware to fix path routing for Vercel.
-    Vercel rewrites /api/chat -> /api/index.py?path=chat
-    This extracts the real path from the query param.
+    Debug middleware that logs all scope details.
     """
     def __init__(self, app):
         self.app = app
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            # Check if we have path in query string
+            path = scope.get("path", "")
             qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
+            method = scope.get("method", "")
             
+            print(f"\n{'='*80}", flush=True)
+            print(f"[VERCEL] INCOMING REQUEST", flush=True)
+            print(f"[VERCEL] PATH: {path}", flush=True)
+            print(f"[VERCEL] QUERY_STRING: {qs}", flush=True)
+            print(f"[VERCEL] METHOD: {method}", flush=True)
+            print(f"[VERCEL] RAW_PATH: {scope.get('raw_path')}", flush=True)
+            
+            # Log all headers
+            print(f"[VERCEL] HEADERS:", flush=True)
+            for name, value in scope.get("headers", []):
+                name_str = name.decode("utf-8", errors="ignore")
+                value_str = value.decode("utf-8", errors="ignore")
+                if name_str.lower() in ["x-forwarded-path", "x-original-path", "x-forwarded-uri"]:
+                    print(f"  {name_str}: {value_str}", flush=True)
+            
+            print(f"{'='*80}\n", flush=True)
+            
+            # Try to extract real path from query string
             if qs and "path=" in qs:
-                # Extract the path parameter
-                parts = qs.split("path=")
-                if len(parts) > 1:
-                    # Get the first value of path param (before any & if multiple params)
-                    path_value = parts[1].split("&")[0]
-                    # Decode URL-encoded characters if needed
+                try:
+                    path_value = qs.split("path=")[1].split("&")[0]
                     import urllib.parse
                     path_value = urllib.parse.unquote(path_value)
-                    # Construct the real path
                     new_path = "/" + path_value if not path_value.startswith("/") else path_value
                     
-                    print(f"[VERCEL] Extracted path from query: {new_path}", flush=True)
+                    print(f"[FIX] Changing path from {path} to {new_path}", flush=True)
                     
-                    # Update the ASGI scope with the real path
                     scope = {
                         **scope,
                         "path": new_path,
                         "raw_path": new_path.encode("utf-8")
                     }
+                except Exception as e:
+                    print(f"[ERROR] Failed to extract path: {e}", flush=True)
         
         await self.app(scope, receive, send)
 
 
 # Wrap the FastAPI app with our middleware before passing to Mangum
-handler = Mangum(VercelPathMiddleware(app), lifespan="off")
+handler = Mangum(DebugPathMiddleware(app), lifespan="off")
