@@ -1,6 +1,5 @@
 """
 Vercel Python Serverless entry point for FastAPI.
-Sets root_path for FastAPI running under /api/ prefix.
 """
 import sys
 import os
@@ -12,6 +11,35 @@ os.chdir(_backend_dir)
 from main import app
 from mangum import Mangum
 
-# For Vercel: FastAPI is running under /api/ prefix, so set root_path
-# This tells Mangum/FastAPI to expect requests like /api/chat to work with @app.post("/chat")
-handler = Mangum(app, root_path="/api")
+class StripApiPrefixMiddleware:
+    """Strip /api prefix from incoming requests."""
+    def __init__(self, app):
+        self.app = app
+    
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            path = scope.get("path", "")
+            print(f"[REQUEST] path={path}", file=sys.stderr)
+            
+            # Strip /api prefix if present
+            if path.startswith("/api/"):
+                new_path = path[4:]  # Remove "/api"
+                print(f"[STRIPPED] {path} -> {new_path}", file=sys.stderr)
+                scope = {
+                    **scope,
+                    "path": new_path,
+                    "raw_path": new_path.encode()
+                }
+            elif path == "/api":
+                new_path = "/"
+                print(f"[STRIPPED] /api -> /", file=sys.stderr)
+                scope = {
+                    **scope,
+                    "path": new_path,
+                    "raw_path": new_path.encode()
+                }
+        
+        await self.app(scope, receive, send)
+
+# Wrap with middleware and Mangum
+handler = Mangum(StripApiPrefixMiddleware(app), lifespan="off")
