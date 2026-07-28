@@ -25,13 +25,20 @@ class PathParamMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
+            # Debug: log what we receive
+            print(f"DEBUG: path={scope.get('path')}, method={scope.get('method')}")
+            print(f"DEBUG: query_string={scope.get('query_string')}")
+            print(f"DEBUG: raw_path={scope.get('raw_path')}")
+            
             # Parse query string to extract ?path=
             qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
             parsed = parse_qs(qs)
+            print(f"DEBUG: parsed qs={parsed}")
             
             if "path" in parsed:
                 # Vercel passed the real path as ?path=chat
                 real_path = "/" + parsed["path"][0]
+                print(f"DEBUG: extracted real_path={real_path}")
                 scope = {
                     **scope,
                     "path": real_path,
