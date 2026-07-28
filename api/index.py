@@ -1,6 +1,5 @@
 """
-Vercel Python Serverless entry point.
-Handles path rewriting for FastAPI on Vercel.
+Vercel Python Serverless entry point for FastAPI.
 """
 import sys
 import os
@@ -12,35 +11,44 @@ os.chdir(_backend_dir)
 from main import app
 from mangum import Mangum
 
-# Wrap FastAPI app with middleware to fix path routing
-from fastapi import FastAPI
 
-class PathFixMiddleware:
+class ASGIDebugMiddleware:
+    """
+    Debug middleware to understand what scope Vercel sends.
+    Tries multiple strategies to reconstruct the real path.
+    """
     def __init__(self, app):
         self.app = app
-    
+
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            path = scope["path"]
-            print(f"[PATH] Received path: {path}", file=sys.stderr)
+            original_path = scope["path"]
+            original_qs = scope.get("query_string", b"").decode()
             
-            # Check if path is /api/index or similar - if so, check for the real path in query string
-            if "/index" in path or path == "/":
-                qs = scope.get("query_string", b"").decode("utf-8")
-                print(f"[QS] Query string: {qs}", file=sys.stderr)
-                
-                if "path=" in qs:
-                    # Extract path from query param
-                    path_value = qs.split("path=")[1].split("&")[0]
-                    new_path = "/" + path_value
-                    print(f"[FIX] Extracted new path: {new_path}", file=sys.stderr)
-                    scope = {
-                        **scope,
-                        "path": new_path,
-                        "raw_path": new_path.encode()
-                    }
+            # Log what we receive
+            print(f"SCOPE DEBUG: path={original_path}, qs={original_qs}", file=sys.stderr, flush=True)
+            
+            # Try to find the real path from multiple sources
+            real_path = original_path
+            
+            # Strategy 1: Check query string for __path or path parameter
+            if "__path=" in original_qs:
+                try:
+                    real_path = "/" + original_qs.split("__path=")[1].split("&")[0]
+                    print(f"FIXED from __path: {real_path}", file=sys.stderr, flush=True)
+                except:
+                    pass
+            
+            # If we found a better path, update the scope
+            if real_path != original_path:
+                scope = {
+                    **scope,
+                    "path": real_path,
+                    "raw_path": real_path.encode(),
+                }
         
         await self.app(scope, receive, send)
 
-# Use PathFixMiddleware to handle Vercel's path rewriting
-handler = Mangum(PathFixMiddleware(app), lifespan="off")
+
+# Wrap with debug middleware
+handler = Mangum(ASGIDebugMiddleware(app))
