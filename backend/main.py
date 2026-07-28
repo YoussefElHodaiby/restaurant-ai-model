@@ -767,14 +767,6 @@ async def root():
     return {"status": "Restaurant AI Assistant API running"}
 
 
-@app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
-async def catch_all(path_name: str):
-    """Catch-all route to handle any unmatched paths and log them"""
-    import sys
-    print(f"[CATCH_ALL] Unmatched path: /{path_name}", file=sys.stderr, flush=True)
-    return {"error": f"Not Found: /{path_name}", "status": 404}
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
