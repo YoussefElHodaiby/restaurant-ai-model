@@ -1,20 +1,39 @@
 """
 Vercel Python Serverless entry point.
-Imports the FastAPI app from backend/main.py and wraps it with Mangum
-so it runs as an AWS Lambda-style handler (Vercel's Python runtime).
 """
 import sys
 import os
 
-# Make backend/ importable and set CWD so relative CSV paths resolve correctly
+# Make backend/ importable and set CWD so CSV files resolve correctly
 _backend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend")
 sys.path.insert(0, _backend_dir)
 os.chdir(_backend_dir)
 
-from main import app  # FastAPI app
+from main import app
 from mangum import Mangum
 
-# Mangum bridges ASGI (FastAPI) to Vercel's Lambda runtime.
-# api_gateway_base_path strips /api prefix before FastAPI sees the request,
-# so routes like /chat, /reservations, /tables all work unchanged.
-handler = Mangum(app, lifespan="off", api_gateway_base_path="/api")
+
+class StripApiPrefix:
+    """
+    ASGI middleware that strips /api prefix from the request path before
+    FastAPI sees it.  Vercel forwards the full path (/api/chat) to the
+    function, but FastAPI only knows the route /chat.
+    """
+    def __init__(self, application, prefix: str = "/api"):
+        self.app = application
+        self.prefix = prefix.encode()
+        self.prefix_str = prefix
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") in ("http", "websocket"):
+            path: str = scope.get("path", "")
+            if path.startswith(self.prefix_str):
+                stripped = path[len(self.prefix_str):] or "/"
+                scope = {**scope, "path": stripped}
+                raw: bytes = scope.get("raw_path", b"")
+                if raw.startswith(self.prefix):
+                    scope["raw_path"] = raw[len(self.prefix):] or b"/"
+        await self.app(scope, receive, send)
+
+
+handler = Mangum(StripApiPrefix(app), lifespan="off")
