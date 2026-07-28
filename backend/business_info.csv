@@ -1,0 +1,49 @@
+key,value,category,notes
+name,Bella Italia,restaurant,Primary restaurant name
+cuisine,Italian,restaurant,Type of cuisine
+description,Authentic Italian Cuisine • Family Recipes Since 1995,restaurant,Restaurant tagline
+address,123 Italian Street New York NY 10001,contact,Full street address
+phone,(555) 123-4567,contact,Main phone number
+email,info@bellaitalia.com,contact,Contact email
+hours,11 AM - 10 PM (Monday - Sunday),operations,Business hours
+open_hour,11,operations,Opening hour in 24-hour format
+close_hour,22,operations,Closing hour in 24-hour format
+max_duration_hours,2,operations,Maximum reservation duration in hours
+max_party_size,8,operations,Maximum party size allowed
+table_count,10,operations,Total number of tables
+specialty_1,Spaghetti al Carbonara,specialties,House specialty
+specialty_2,Pappardelle al Ragù,specialties,House specialty
+specialty_3,Osso Buco with Risotto,specialties,House specialty
+specialty_4,Pizza Margherita,specialties,House specialty
+specialty_5,Tiramisu,specialties,House specialty
+dish_1,Bruschetta al Pomodoro|Appetizers|$8|Toasted bread with fresh tomatoes and basil,menu,Appetizer
+dish_2,Calamari Fritti|Appetizers|$12|Golden fried squid with marinara sauce,menu,Appetizer
+dish_3,Mozzarella di Bufala|Appetizers|$10|Fresh buffalo mozzarella with heirloom tomatoes,menu,Appetizer
+dish_4,Spaghetti al Carbonara|Pasta & Risotto|$16|Classic Roman pasta with eggs guanciale and cheese,menu,Pasta
+dish_5,Pappardelle al Ragù|Pasta & Risotto|$18|Wide ribbon pasta with slow-cooked meat sauce,menu,Pasta
+dish_6,Lasagna della Nonna|Pasta & Risotto|$15|Traditional layered pasta with bolognese and béchamel,menu,Pasta
+dish_7,Osso Buco with Risotto|Pasta & Risotto|$28|Braised veal shanks served with saffron risotto,menu,Pasta
+dish_8,Margherita|Pizza|$14|Classic tomato mozzarella and basil,menu,Pizza
+dish_9,Quattro Formaggi|Pizza|$16|Four cheese blend with truffle oil,menu,Pizza
+dish_10,Prosciutto e Rucola|Pizza|$17|Thin crust with prosciutto and arugula,menu,Pizza
+dish_11,Tiramisu|Desserts|$7|Layers of mascarpone espresso and cocoa,menu,Dessert
+dish_12,Panna Cotta|Desserts|$7|Silky vanilla cream with berry compote,menu,Dessert
+dish_13,Gelato Trio|Desserts|$8|Three flavors of authentic Italian gelato,menu,Dessert
+table_1,Table 1 (Cozy Corner)|2,tables,Small intimate table
+table_2,Table 2 (Window Seat)|2,tables,Small window view table
+table_3,Table 3 (Bar Counter)|2,tables,Small bar counter table
+table_4,Table 4 (Family)|4,tables,Medium family table
+table_5,Table 5 (Friends)|4,tables,Medium friends table
+table_6,Table 6 (Date Night)|4,tables,Medium romantic table
+table_7,Table 7 (Large Group)|6,tables,Large party table
+table_8,Table 8 (Party)|6,tables,Large party table
+table_9,Table 9 (Special Event)|6,tables,Large special event table
+table_10,Table 10 (Private)|8,tables,Private large table
+policy_1,Only accept reservations between opening and closing hours,policies,Business hours policy
+policy_2,Each reservation is limited to 2 hours,policies,Duration policy
+policy_3,Never book the same table for overlapping times,policies,No double-booking
+policy_4,Match party size with appropriate table capacity,policies,Table selection
+policy_5,Always respond with warmth and Italian hospitality,policies,Service philosophy
+vegetarian_options,Mozzarella di Bufala|Bruschetta al Pomodoro|Margherita|Panna Cotta|Gelato Trio,dietary,Vegetarian menu items
+payment_policy,Accept cash and all major credit cards,policies,Payment methods
+reservation_confirmation,Confirm with table number date time and dishes selected,policies,Confirmation format
