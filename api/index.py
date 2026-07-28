@@ -1,6 +1,5 @@
 """
 Vercel Python Serverless entry point for FastAPI.
-Uses Mangum ASGI adapter to convert FastAPI to AWS Lambda handler.
 """
 import sys
 import os
@@ -12,6 +11,5 @@ os.chdir(_backend_dir)
 from main import app
 from mangum import Mangum
 
-# Use Mangum to wrap FastAPI for AWS Lambda/Vercel
-# The root_path parameter handles the /api prefix that Vercel adds
-handler = Mangum(app, root_path="/api")
+# Simple Mangum wrap - no middleware, no root_path
+handler = Mangum(app)

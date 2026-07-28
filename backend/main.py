@@ -13,6 +13,7 @@ import re
 import csv
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import sys
 
 try:
     import psycopg2
@@ -48,6 +49,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add logging middleware to debug requests
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"[FASTAPI] {request.method} {request.url.path}", file=sys.stderr, flush=True)
+    response = await call_next(request)
+    return response
 
 # CSV files for data storage — use absolute paths so they resolve correctly on Vercel
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
