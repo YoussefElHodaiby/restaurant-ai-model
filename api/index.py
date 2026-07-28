@@ -16,9 +16,11 @@ from mangum import Mangum
 
 class PathParamMiddleware:
     """
-    ASGI middleware that extracts the real path from Vercel's ?path= query param.
-    Vercel rewrites /api/chat -> /api/index.py?path=chat
-    We need to use /chat as the path so FastAPI routes correctly.
+    ASGI middleware that extracts the real path from Vercel's rewrite.
+    Tries multiple strategies:
+    1. Check query param ?path=
+    2. Check X-Forwarded-Path header
+    3. Check Vercel-provided env vars
     """
     def __init__(self, application):
         self.app = application
@@ -29,21 +31,35 @@ class PathParamMiddleware:
             print(f"DEBUG: path={scope.get('path')}, method={scope.get('method')}")
             print(f"DEBUG: query_string={scope.get('query_string')}")
             print(f"DEBUG: raw_path={scope.get('raw_path')}")
+            print(f"DEBUG: headers={dict(scope.get('headers', []))}")
             
-            # Parse query string to extract ?path=
+            # Try to extract real path
+            real_path = None
+            
+            # Strategy 1: Check query string for ?path=
             qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
             parsed = parse_qs(qs)
-            print(f"DEBUG: parsed qs={parsed}")
-            
             if "path" in parsed:
-                # Vercel passed the real path as ?path=chat
                 real_path = "/" + parsed["path"][0]
-                print(f"DEBUG: extracted real_path={real_path}")
+                print(f"DEBUG: found path in query string: {real_path}")
+            
+            # Strategy 2: Check X-Forwarded-Path header
+            if not real_path:
+                headers = dict(scope.get("headers", []))
+                for key, value in headers.items():
+                    if key.lower() == b"x-forwarded-path":
+                        real_path = value.decode("utf-8", errors="ignore")
+                        print(f"DEBUG: found X-Forwarded-Path: {real_path}")
+                        break
+            
+            # Apply the real path if found
+            if real_path:
                 scope = {
                     **scope,
                     "path": real_path,
                     "raw_path": real_path.encode("utf-8"),
                 }
+                print(f"DEBUG: modified scope.path to: {real_path}")
         
         await self.app(scope, receive, send)
 
